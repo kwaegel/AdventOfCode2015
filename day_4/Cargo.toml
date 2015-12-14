@@ -1,0 +1,7 @@
+[package]
+name = "day_4"
+version = "0.1.0"
+authors = ["Ky Waegel <kwaegel@cs.unc.edu>"]
+
+[dependencies]
+rust-crypto = "^0.2"
