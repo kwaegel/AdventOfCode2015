@@ -1,0 +1,8 @@
+[package]
+name = "day_8"
+version = "0.1.0"
+authors = ["Ky Waegel <kwaegel@cs.unc.edu>"]
+
+[dependencies]
+regex = "0.1"
+rustc-serialize = "0.3"

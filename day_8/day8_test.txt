@@ -1,0 +1,6 @@
+""
+"abc"
+"aaa\"aaa"
+"\x27"
+"abc\\abc"
+"\xb0"
