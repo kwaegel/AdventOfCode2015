@@ -1,4 +1,3 @@
- #[allow(unused_imports)]
 
 use std::error::Error;
 use std::fs::File;
@@ -52,8 +51,13 @@ fn strip_escape_chars(text: &String) -> String {
 	let re_quotes = Regex::new(r"(^.|.$)").unwrap();
 	let result3 = re_quotes.replace_all(&result2, "");
 	
-	println!("{0: <45}  =>  {1: <45}", text, result3);
+	//println!("{0: <45}  =>  {1: <45}", text, result3);
 	result3
+}
+
+fn add_escape_chars(text: &String) -> String {
+	let encoded = text.replace("\\", r"\\").replace("\"", r#"\""#);
+	format!("\"{}\"", encoded)
 }
 
 fn main() {
@@ -62,7 +66,7 @@ fn main() {
 	let mut total_raw = 0;
 	let mut total_str = 0;
 	
-	for string in strings {
+	for string in &strings {
 	
 		let stripped_string = strip_escape_chars(&string);	
 		
@@ -77,5 +81,19 @@ fn main() {
 	}
 	
 	let delta = total_raw - total_str;
-	println!("{} - {} = {}", total_raw, total_str, delta);
+	println!("Part 1: {} - {} = {}", total_raw, total_str, delta);
+	
+	let mut total_encoded = 0;
+	for string in &strings {
+		let encoded_string = add_escape_chars(&string);
+		let raw_length = string.chars().count();
+		let encoded_length = encoded_string.chars().count();
+		total_encoded += encoded_length;
+		
+		println!("{0: <45} => {1: <55}  ::  {2: >2} -> {3: >2}", string, encoded_string,
+		raw_length, encoded_length);
+	}
+	
+	let encoding_padding = total_encoded - total_raw;
+	println!("Part 1: {} - {} = {}", total_encoded, total_raw, encoding_padding);
 }
