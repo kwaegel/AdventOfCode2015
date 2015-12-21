@@ -36,20 +36,19 @@ fn parse_json_array(json: &Vec<Json>, tree_depth: usize) -> i64 {
 
 fn parse_json_tree(json: &Json, tree_depth: usize) -> i64 {
 	
-	print!("{: >1$}", " ", tree_depth);
-	
 	// Json types: I64, U64, F64, Boolean, String, Array, Object, Null
 	match *json {
-		Json::Null 			=> { println!("(null)");         0},
-		Json::I64(v)     	=> { println!("{} (i64)",    v); v},
-		Json::U64(v)     	=> { println!("{} (u64)",    v); v as i64},
-		Json::F64(v)     	=> { println!("{} (f64)",    v); v as i64},
-		Json::Boolean(b) 	=> { println!("{} (bool)",   b); 0},
-		Json::String(ref s) => { println!("{} (string)", s); 0},
+		Json::Null 			=> { println!("(null)"); 0},
+		Json::I64(v)     	=> { println!("{}", v);  v},
+		Json::U64(v)     	=> { println!("{}", v);  v as i64},
+		Json::F64(v)     	=> { println!("{}", v);  v as i64},
+		Json::Boolean(b) 	=> { println!("{}", b);  0},
+		Json::String(ref s) => { println!("{}", s);  0},
 		Json::Array(ref arr) => {
 			println!("(array)",);
 			let mut sum = 0;
 			for arr_obj in arr {
+				print!("{: >1$}", " ", tree_depth);
 				sum += parse_json_tree(arr_obj, tree_depth+1);
 			}
 			sum
@@ -59,8 +58,14 @@ fn parse_json_tree(json: &Json, tree_depth: usize) -> i64 {
 			let mut sum = 0;
 			for (key, value) in obj.iter() {
 				print!("{: >1$}", " ", tree_depth);
-				print!("{}", key);
+				print!("{}: ", key);
 				sum += parse_json_tree(value, tree_depth+1);
+				
+				// Skip counting this object if a key contains "red"
+				match *value {
+					Json::String(ref s) => if s == "red" { return 0},
+					_ => {},
+				};
 			}
 			sum
 		},
