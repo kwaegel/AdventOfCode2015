@@ -95,20 +95,38 @@ fn main() {
 	let strings = get_input_lines("day13.txt");
 	let (name_indices_map, happiness) = create_happiness_mapping(&strings);
 	
-	let num_people = name_indices_map.len();
-	let mut seating: Vec<usize> = (0..num_people).collect();
-	
-	let seating_permutations = permutohedron::Heap::new(&mut seating);
-	
-	let mut max_score = i32::min_value();
-	for arrangement in seating_permutations {
-		let score = score_arrangement(&happiness, &arrangement);
-		max_score = cmp::max(max_score, score);
-		//println!("{:?} => {}", arrangement, score);
+	{
+		let num_people = name_indices_map.len();
+		let mut seating: Vec<usize> = (0..num_people).collect();
+		
+		let seating_permutations = permutohedron::Heap::new(&mut seating);
+		
+		let mut max_score = i32::min_value();
+		for arrangement in seating_permutations {
+			let score = score_arrangement(&happiness, &arrangement);
+			max_score = cmp::max(max_score, score);
+		}
+		
+		// Not clear why this won't compile
+		//let best_idx = seating_permutations.max_by_key(|ref item| score_arrangement(&happiness, &item));
+
+		println!("Part 1: max score {}", max_score);
 	}
 	
-	// Not clear why this won't compile
-	//let best_idx = seating_permutations.max_by_key(|ref item| score_arrangement(&happiness, &item));
-
-	println!("Max score {}", max_score);
+	// Now add yourself with a happiness change of 0.
+	// The happiness map is already oversized...so just pretend there is one more person...
+	{
+		let num_people_pt2 = name_indices_map.len()+1;
+		let mut seating_pt2: Vec<usize> = (0..num_people_pt2).collect();
+		
+		let seating_permutations_pt2 = permutohedron::Heap::new(&mut seating_pt2);
+		
+		let mut max_score_pt2 = i32::min_value();
+		for arrangement in seating_permutations_pt2 {
+			let score = score_arrangement(&happiness, &arrangement);
+			max_score_pt2 = cmp::max(max_score_pt2, score);
+		}
+		
+		println!("Part 2: max score (including yourself) {}", max_score_pt2);
+	}
 }
