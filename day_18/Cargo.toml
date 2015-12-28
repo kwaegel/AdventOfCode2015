@@ -1,0 +1,8 @@
+[package]
+name = "day_18"
+version = "0.1.0"
+authors = ["Ky Waegel <ky@matterport.com>"]
+
+[dependencies]
+itertools = "0.4.5"
+nalgebra = "0.4.0"
