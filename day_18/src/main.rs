@@ -93,24 +93,67 @@ fn sum_grid(grid: &DMat<i32>) -> i32 {
 
 // --------------------------------------------------------
 
+fn lock_corners(grid: &mut DMat<i32>) {
+	let max_row_idx = grid.nrows()-1;
+	let max_col_idx = grid.ncols()-1;
+	grid[(0,0)] = 1;
+	grid[(max_row_idx, 0)] = 1;
+	grid[(0, max_col_idx)] = 1;
+	grid[(max_row_idx, max_col_idx)] = 1;
+}
+
+// --------------------------------------------------------
 
 fn main() {
-    println!("Hello, world!");
-	
-	let mut test_grid = read_grid("day18_test.txt");
-	println!("{:?}", test_grid);
-	
-	for step in 1..5 {
-		println!("\nAfter {} steps", step);
-		test_grid = iterate(&test_grid);
+    
+	{
+		let mut test_grid = read_grid("day18_test.txt");
 		println!("{:?}", test_grid);
+		
+		for step in 1..5 {
+			test_grid = iterate(&test_grid);
+			
+			println!("\nAfter {} steps", step);		
+			let lights_on = sum_grid(&test_grid);
+			println!("({} lights on)", lights_on);
+			println!("{:?}", test_grid);
+		}
+		
+		let mut grid = read_grid("day18.txt");
+		for _ in 1..101 {
+			grid = iterate(&grid);
+		}
+		let lights_on = sum_grid(&grid);
+		println!("Part 1: lights on {}", lights_on);
+		assert_eq!(lights_on, 821);
 	}
 	
-	let mut grid = read_grid("day18.txt");
-	for _ in 1..101 {
-		grid = iterate(&grid);
+	println!("");
+	
+	// Part 2
+	{
+		let mut test_grid = read_grid("day18_test2.txt");
+		println!("Part 2 test grid:\n{:?}", test_grid);
+		
+		for step in 1..6 {
+			test_grid = iterate(&test_grid);
+			lock_corners(&mut test_grid);
+			
+			println!("\nAfter {} steps", step);		
+			let lights_on = sum_grid(&test_grid);
+			println!("({} lights on)", lights_on);
+			println!("{:?}", test_grid);
+		}
+		
+		
+		let mut grid = read_grid("day18.txt");
+		lock_corners(&mut grid);
+		for _ in 1..101 {
+			grid = iterate(&grid);
+			lock_corners(&mut grid);
+		}
+		let lights_on = sum_grid(&grid);
+		println!("Part 2: lights on {}", lights_on);
+		assert_eq!(lights_on, 886);
 	}
-	let lights_on = sum_grid(&grid);
-	println!("Part 1: lights on {}", lights_on);
-	assert_eq!(lights_on, 821);
 }
