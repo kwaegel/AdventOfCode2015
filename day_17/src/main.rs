@@ -7,13 +7,16 @@ use std::path::Path;
 
 
 // Number of permutations summing to value N
-fn find_permutation_sums(values: &[i32], target: i32) -> i32 {
+// Values: container sizes
+// target: remaining eggnog to be stored
+// prior_used: containers used prior to this call
+// hist: histogram of container counts
+fn find_permutation_sums(values: &[i32], target: i32, prior_used: usize, hist: &mut Vec<i32>) {
 
-	let indent = 21-values.len();
+	//let indent = 21-values.len();
 	//print!("{spacer:>0width$}", spacer=" ", width=indent);
 	//println!("{:?} : {}", values, target);
 
-	let mut permutations = 0;
 	for i in 0..values.len() {
 		let remaining_target = target - values[i];
 		if remaining_target < 0 {
@@ -21,19 +24,32 @@ fn find_permutation_sums(values: &[i32], target: i32) -> i32 {
 			continue;
 		} else if remaining_target == 0 {
 			// Number is just the right size. Don't check extra values.
-			permutations +=1;
+			hist[prior_used + 1] += 1; // Record number of containers used
 			continue;
 		} else if i < values.len() - 1 {
 			// Check this value plus the sum from remaining values
 			let subslice = &values[i+1..values.len()];
-			permutations += find_permutation_sums(subslice, remaining_target);
+			find_permutation_sums(subslice, remaining_target, prior_used + 1, hist);
 		}		
 	}
-	permutations
 }
 
 
 fn main() {
+
+	{
+		let test_values = vec![20, 15, 10, 5, 5];
+		let mut hist = vec![0; test_values.len()];
+		//println!("{:?}", test_values);
+		find_permutation_sums(&test_values[..], 25, 0, &mut hist);
+		let num_permutations_25 = hist.iter().fold(0, |sum, x| sum + x);
+		//println!("{:?}", hist);
+		//println!("Number of test values summing to 25 is {}", num_permutations_25);
+		assert_eq!(num_permutations_25, 4);
+	}
+	
+	
+
 	let path = Path::new("day17.txt");
     let display = path.display();
 
@@ -50,14 +66,14 @@ fn main() {
 							  .collect();
 	
 	values.sort_by(|a, b| b.cmp(a));	// Reverse sort
-    println!("{:?}", values);	
-	let num_permutations_150 = find_permutation_sums(&values[..], 150);
-	println!("Number of values summing to 150 is {}", num_permutations_150);
+    println!("Input values: {:?}", values);	
 	
-	let test_values = vec![20, 15, 10, 5, 5];
-	//println!("{:?}", test_values);	
-	let num_permutations_25 = find_permutation_sums(&test_values[..], 25);
-	//println!("Number of values summing to 25 is {}", num_permutations_25);
-	assert_eq!(num_permutations_25, 4);
+	let mut histogram = vec![0; values.len()];
+	find_permutation_sums(&values[..], 150, 0, &mut histogram);
+	let num_permutations_150 = histogram.iter().fold(0, |sum, x| sum + x);
+	assert_eq!(num_permutations_150, 4372);
+	println!("Part 1: Number of permutations summing to 150 is {}", num_permutations_150);
+	println!("Part 2: histogram {:?}", histogram);
+	assert_eq!(histogram[4], 4);
 	
 }
