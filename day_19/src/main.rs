@@ -7,6 +7,9 @@ use std::path::Path;
 
 use std::collections::HashSet;
 
+extern crate regex;
+use regex::Regex;
+
 struct Mapping {
 	input: String,
 	output: String,
@@ -53,6 +56,7 @@ fn read_input(filename: &str) -> (Vec<Mapping>, String) {
 // --------------------------------------------------------
 
 fn main() {
+
 	let (mapping_list, input) = read_input("day19.txt");
 	
 	let mut output_set = HashSet::new();
@@ -88,7 +92,41 @@ fn main() {
 	
 	let num_unique = output_set.len();
 	println!("Part 1: there are {} unique strings.", num_unique);
+	
 	assert_eq!(num_unique, 535);
 	
 	
+	// Part 2: Reduce the string to else
+	// Notes
+	//  * The rules are in the form
+	//       e => XX
+	//		 X => XX
+	//		 X => X Rn X Ar | X Rn X Y X Ar | X Rn X Y X Y Ar
+	//  * Thinking of Rn and Ar as () and Y as , we get
+	//       e => XX
+	//		 X => XX
+	//		 X => X(X) | X(X,X) || X(X,X,X)
+	// To reduce a string of normal tokens to a single token takes tokens.len() - 1
+	// To reduce a string of X(X) tokens takes tokens.len() - perens.len() - 1
+	// To reduce a string of X(X,X,X) is the same as above, but an extra two for each the ,X
+	
+	let mut working = input.clone();
+	working = working.replace("Rn", "(");
+	working = working.replace("Ar", ")");
+	working = working.replace("Y", ",");
+	//println!("Working str: {}", &working);
+	
+	// Convert double-character tokens to 'X's for counting
+	let re = Regex::new(r"[:upper:]{1}[:lower:]{1}").unwrap();
+	working = re.replace_all(&working, "X");
+
+	//println!("Working str: {}", &working);
+	
+	let token_count = working.len(); // FIXME: this needs to count tokens, not characters.
+	let peren_count = working.matches("(").count() + working.matches(")").count();
+	let sep_count = working.matches(",").count();
+	
+	let steps = token_count - peren_count - 2*sep_count - 1;
+	println!("Part 2: Required steps is {}", steps);
+	assert_eq!(steps, 212);
 }
