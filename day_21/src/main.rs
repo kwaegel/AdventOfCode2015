@@ -62,7 +62,6 @@ fn main() {
     println!("Hello, world!");
     
     let weapons = vec![
-        Item::new("no weapon",        0, 0, 0),
         Item::new("Dagger",      8, 4, 0),
         Item::new("Shortsword", 10, 5, 0),
         Item::new("Warhammer",  25, 6, 0),
@@ -71,7 +70,7 @@ fn main() {
     ];
     
     let armors = vec![
-        Item::new("no armor",         0, 0, 0),
+        Item::new("no armor",     0, 0, 0), // Armor is optional
         Item::new("Leather",     13, 0, 1),
         Item::new("Chainmail",   31, 0, 2),
         Item::new("Splintmail",  53, 0, 3),
@@ -80,7 +79,8 @@ fn main() {
     ];
     
     let rings = vec![
-        Item::new("no ring",        0, 0, 0),
+        Item::new("no ring",     0, 0, 0),  // Rings are optional
+        Item::new("no ring",     0, 0, 0),
         Item::new("Damage +1",  25, 1, 0),
         Item::new("Damage +2",  50, 2, 0),
         Item::new("Damage +3", 100, 3, 0),
@@ -97,9 +97,10 @@ fn main() {
     
     let base_player = Stats {health: 100, attack: 0, defence: 0};
     
-    let mut lowest_cost = i32::max_value();
+    let mut lowest_cost_to_win = i32::max_value();
+    let mut highest_cost_and_lose = 0;
     
-    // There are few enough possible combinations for a brute-force search.
+    // There are few enough possible combinations for a brute-force search for the lowest cost to win.
     for weapon in &weapons {
         for armor in &armors {
             for ring1 in &rings {
@@ -114,11 +115,17 @@ fn main() {
                         
                         let victory = player_wins(player, boss, false);
                         
-                        if victory && cost < lowest_cost {
-                            player_wins(player, boss, true);
+                        if victory && cost < lowest_cost_to_win {
+                            //player_wins(player, boss, true);
                             println!("Victory! for {} gold with {}, {}, {}, {},", cost, weapon, armor, ring1, ring2);
-                            println!("");
-                            lowest_cost = cost;
+                            lowest_cost_to_win = cost;
+                        }
+                        
+                        if !victory && cost > highest_cost_and_lose {
+                            //player_wins(player, boss, true);
+                            println!("Loss! for {} gold with {}, {}, {}, {},", cost, weapon, armor, ring1, ring2);
+                            //println!("");
+                            highest_cost_and_lose = cost;
                         }
                     }
                 }
@@ -126,6 +133,14 @@ fn main() {
         }
     }
     
+ 
+    println!("Lowest cost to win is {} gold", lowest_cost_to_win);
+    println!("Highest cost to still loose is {} gold", highest_cost_and_lose);
+    println!("");
+    
     // Solution for part 1 is 91 gold.
-    assert_eq!(lowest_cost, 91);
+    assert_eq!(lowest_cost_to_win, 91);   
+    
+    // Solution for part 2 is 158 gold.
+    assert_eq!(highest_cost_and_lose, 158);   
 }
