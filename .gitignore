@@ -2,3 +2,5 @@ target
 cargo.lock
 */.idea/*
 */.vscode/*
+*.bk
+*.exe
