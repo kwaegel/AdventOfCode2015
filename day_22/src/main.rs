@@ -185,7 +185,7 @@ fn print_player_turn(initial_state: &BattleState, spell_to_cast: Option<&Spell>)
     pause();
 }
 
-fn print_boss_turn(initial_state: BattleState, damage: i32) {
+fn print_boss_turn(initial_state: &BattleState, damage: i32) {
     // Replay all state messages and effects on a copy of the battle.
     let mut state = initial_state.clone();
 
@@ -208,15 +208,25 @@ fn print_boss_turn(initial_state: BattleState, damage: i32) {
 
 // Run a round of battle and return the lowest amount of mana used to win.
 // i32::max_value indicates a loss.
-fn take_turn(initial_state: BattleState,
+fn take_turn(initial_state: &BattleState,
              active_character: Character,
-             possible_spells: &Vec<Spell>)
+             possible_spells: &Vec<Spell>,
+             is_hard_mode: bool)
              -> i32 {
 
     let verbose = false;
-    //let verbose = true;
+    // let verbose = true;
 
     let mut state = initial_state.clone();
+
+    // Hard mode: subtract 1 HP at the start of each turn
+    if is_hard_mode && active_character == Character::Player {
+        state.player.health -= 1;
+        if state.player.health <= 0 {
+            return i32::max_value();
+        }
+    }
+
     state.apply_ongoing_effects(false);
 
     // Check for victory from spell effects
@@ -279,7 +289,10 @@ fn take_turn(initial_state: BattleState,
                     if verbose {
                         print_player_turn(&initial_state, Some(spell_to_cast));
                     }
-                    let recursive_result = take_turn(next_state, Character::Boss, &possible_spells);
+                    let recursive_result = take_turn(&next_state,
+                                                     Character::Boss,
+                                                     &possible_spells,
+                                                     is_hard_mode);
                     let total_cost = i32::saturating_add(recursive_result, spell_to_cast.cost);
 
                     current_lowest_cost = cmp::min(total_cost, current_lowest_cost);
@@ -304,13 +317,16 @@ fn take_turn(initial_state: BattleState,
         next_state.player.health -= damage;
 
         if verbose {
-            print_boss_turn(initial_state, damage);
+            print_boss_turn(&initial_state, damage);
         }
 
         if next_state.player.health > 0 {
             // Player is still alive to take a turn
             next_state.turn += 1;
-            let cost = take_turn(next_state, Character::Player, &possible_spells);
+            let cost = take_turn(&next_state,
+                                 Character::Player,
+                                 &possible_spells,
+                                 is_hard_mode);
             return cost;
         } else {
             return i32::max_value();    // Player died
@@ -342,26 +358,36 @@ fn main() {
 
     // Hit Points: 71
     // Damage: 10
-    let starting_boss = Stats {health: 71, attack: 10, armor: 0, mana: 0};
+    let starting_boss = Stats {
+        health: 71,
+        attack: 10,
+        armor: 0,
+        mana: 0,
+    };
 
     // You start with 50 hit points and 500 mana points.
-    let starting_player = Stats {health: 50, attack: 0, armor: 0, mana: 500};
+    let starting_player = Stats {
+        health: 50,
+        attack: 0,
+        armor: 0,
+        mana: 500,
+    };
 
     // // Test characters
     // let starting_boss = Stats {
-        // health: 14,
-        // attack: 8,
-        // armor: 0,
-        // mana: 0,
+    // health: 14,
+    // attack: 8,
+    // armor: 0,
+    // mana: 0,
     // };
     // let starting_player = Stats {
-        // health: 10,
-        // attack: 0,
-        // armor: 0,
-        // mana: 250,
+    // health: 10,
+    // attack: 0,
+    // armor: 0,
+    // mana: 250,
     // };
 
-    
+
     let initial_initial_state = BattleState {
         player: starting_player,
         boss: starting_boss,
@@ -370,10 +396,22 @@ fn main() {
         turn: 0,
     };
 
-    let mana_used = take_turn(initial_initial_state, Character::Player, &possible_spells);
+    let mana_used_easy = take_turn(&initial_initial_state,
+                                   Character::Player,
+                                   &possible_spells,
+                                   false);
 
-    println!("\n######");
-    println!("Final mana used: {:?}", mana_used);
+    println!("######");
+    println!("Final mana used on easy: {:?}", mana_used_easy);
+    assert!(mana_used_easy == 1824);
 
-    assert!(mana_used == 1824);
+
+    let mana_used_hard = take_turn(&initial_initial_state,
+                                   Character::Player,
+                                   &possible_spells,
+                                   true);
+
+    println!("######");
+    println!("Final mana used on hard: {:?}", mana_used_hard);
+    assert!(mana_used_hard == 1937);
 }
