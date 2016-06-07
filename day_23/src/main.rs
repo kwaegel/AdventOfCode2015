@@ -63,7 +63,6 @@ fn read_program_from_file(filename: &str) -> Vec<Instruction> {
 
     // Open the path in read-only mode, returns `io::Result<File>`
     let file = match File::open(&path) {
-        // The `description` method of `io::Error` returns a string that describes the error
         Err(why) => panic!("couldn't open {}: {}", display, Error::description(&why)),
         Ok(file) => file,
     };
@@ -75,11 +74,13 @@ fn read_program_from_file(filename: &str) -> Vec<Instruction> {
     for line in lines {
         let string = line.unwrap();
         let tokens: Vec<&str> = string.split_whitespace().collect();
-
-        //println!("{}", &string);
         let command = Command::parse(tokens[0]);
         let arg_1 = parse_arg_value(tokens[1]);
-        let arg_2 = if tokens.len() > 2 {parse_arg_value(tokens[2]) } else {0};
+        let arg_2 = if tokens.len() > 2 {
+            parse_arg_value(tokens[2])
+        } else {
+            0
+        };
 
         program.push(Instruction {
             command: command,
@@ -101,30 +102,30 @@ fn is_even(num: i32) -> bool {
     num % 2 == 0
 }
 
-fn process_instruction( mut state: ProgramState, instruction: Instruction) -> ProgramState {
+fn process_instruction(mut state: ProgramState, instruction: Instruction) -> ProgramState {
     // hlf r sets register r to half its current value, then continues with the next instruction.
     // tpl r sets register r to triple its current value, then continues with the next instruction.
     // inc r increments register r, adding 1 to it, then continues with the next instruction.
     // jmp offset is a jump; it continues with the instruction offset away relative to itself.
     // jie r, offset is like jmp, but only jumps if register r is even ("jump if even").
     // jio r, offset is like jmp, but only jumps if register r is 1 ("jump if one", not odd).
-    let Instruction{command, arg_1, arg_2} = instruction;
+    let Instruction { command, arg_1, arg_2 } = instruction;
     match command {
-        Command::HLF => { 
+        Command::HLF => {
             state.registers[arg_1 as usize] = state.registers[arg_1 as usize] / 2;
             state.pc += 1;
-        },
+        }
         Command::TPL => {
             state.registers[arg_1 as usize] = state.registers[arg_1 as usize] * 3;
             state.pc += 1;
-        },
+        }
         Command::INC => {
             state.registers[arg_1 as usize] += 1;
             state.pc += 1;
-        },
+        }
         Command::JMP => {
             state.pc += arg_1;
-        },
+        }
         Command::JIE => {
             let reg_value = state.registers[arg_1 as usize] as i32;
             if is_even(reg_value) {
@@ -132,7 +133,7 @@ fn process_instruction( mut state: ProgramState, instruction: Instruction) -> Pr
             } else {
                 state.pc += 1;
             }
-        },
+        }
         Command::JIO => {
             let reg_value = state.registers[arg_1 as usize];
             if reg_value == 1 {
@@ -140,15 +141,13 @@ fn process_instruction( mut state: ProgramState, instruction: Instruction) -> Pr
             } else {
                 state.pc += 1;
             }
-        },
+        }
     }
     state
 }
 
 fn main() {
     let program = read_program_from_file("day23.txt");
-    //let program = read_program_from_file("day23_test.txt");
-    //println!("{:?}", program);
 
     let mut state = ProgramState {
         registers: [0; 2],
@@ -157,17 +156,30 @@ fn main() {
 
     // Loop until program counter indexes out of the program.
     while state.pc >= 0 && state.pc < program.len() as i32 {
-        
         let instruction = program[state.pc as usize];
-        //println!("State: {:?}", &state);
-        //println!("Instruction {:?}", &instruction);
         state = process_instruction(state, instruction);
-        //println!("PC = {}", state.pc);
     }
-    
+
     // Check value of register B
-    //let reg_a_val = state.registers[Registers::RegA as usize];
     let reg_b_val = state.registers[Registers::RegB as usize];
-    println!("Final state is {:?}", state);
+    println!("Part 1: final state is {:?}", state);
     assert_eq!(reg_b_val, 307);
+
+    // **********
+    // Now try with register A starting with value 1.
+    state = ProgramState {
+        registers: [1, 0],
+        pc: 0,
+    };
+
+    // Loop until program counter indexes out of the program.
+    while state.pc >= 0 && state.pc < program.len() as i32 {
+        let instruction = program[state.pc as usize];
+        state = process_instruction(state, instruction);
+    }
+
+    // Check value of register B
+    let reg_b_val = state.registers[Registers::RegB as usize];
+    println!("Part 2: final state is {:?}", state);
+    assert_eq!(reg_b_val, 160);
 }
