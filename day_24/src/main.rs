@@ -22,8 +22,13 @@ impl Group {
         let weight = indices.iter().fold(0u64, |sum, &i| sum + weights[i] as u64);
         let qe = indices.iter().fold(1u64, |prod, &i| prod * weights[i] as u64);
         let bitset = make_bitset32(indices);
-        
-        Group{count: count, weight: weight, qe: qe, bitset: bitset}
+
+        Group {
+            count: count,
+            weight: weight,
+            qe: qe,
+            bitset: bitset,
+        }
     }
 }
 
@@ -88,39 +93,45 @@ fn main() {
                                  .collect();
 
     let total_weight = weights.iter().fold(0, |sum, &n| sum + n);
-    let bin_size = total_weight / 3;
+    let bin_size_3 = total_weight / 3;
 
-    println!("Trying to fit {} items of total weight {} into three bins of size {} each.",
+    println!("Part 1: Trying to fit {} items of total weight {} into three bins of size {} each.",
              weights.len(),
              total_weight,
-             bin_size);
+             bin_size_3);
 
     let mut used = vec![false; weights.len()];
     let mut results = Vec::new();
-    find_subsets(&weights, 0, bin_size, 0, &mut used, &mut results);
+    find_subsets(&weights, 0, bin_size_3, 0, &mut used, &mut results);
+    println!("Part 1: found {} sets of size {}",
+             results.len(),
+             bin_size_3);
 
-    println!("Found {} sets of size {}", results.len(), bin_size);
-    
-    let mut groups: Vec<Group> = results.iter().map(|ref indices| Group::new(&weights, &indices)).collect();
-    
-    // Sort by package count
-    groups.sort_by_key(|a| a.count);
-    
+    let mut groups: Vec<Group> = results.iter()
+                                        .map(|ref indices| Group::new(&weights, &indices))
+                                        .collect();
+    groups.sort_by_key(|a| a.count);    // Sort by package count
+
     // Now that the groups are sorted by package order, find the first one that
     // has at least one other non-overlapping group (bits & bits) == 0
     // If two groups can exist at the same time, the third exists by default
     let mut lowest_count = u32::max_value();
     let mut lowest_qe = u64::max_value();
     let mut lowest_weight = u64::max_value();
-    let mut best_group = Group{count: 0, weight:0, qe: 0, bitset: 0};
+    let mut best_group = Group {
+        count: 0,
+        weight: 0,
+        qe: 0,
+        bitset: 0,
+    };
     for group_1 in &groups {
         if group_1.count > lowest_count {
             break;
         }
-        
+
         for group_2 in &groups {
             let overlap = group_1.bitset & group_2.bitset;
-            
+
             // If compatible and the weight has not increased
             if overlap == 0 && group_1.weight <= lowest_weight && group_1.qe < lowest_qe {
                 lowest_count = cmp::min(lowest_count, group_1.count);
@@ -130,8 +141,62 @@ fn main() {
             }
         }
     }
-    
-    println!("Found best group_1: {:?}", best_group);
-    
+
+    println!("Part 1: found best group_1: {:?}", best_group);
     assert_eq!(best_group.qe, 11846773891);
+
+    // Part 2
+    // Create four equal weight groups instead of three.
+    println!("");
+
+    let bin_size_4 = total_weight / 4;
+    println!("Part 2: Trying to fit {} items of total weight {} into four bins of size {} each.",
+             weights.len(),
+             total_weight,
+             bin_size_4);
+
+    let mut used = vec![false; weights.len()];
+    let mut results = Vec::new();
+    find_subsets(&weights, 0, bin_size_4, 0, &mut used, &mut results);
+    println!("Part 2: found {} sets of size {}",
+             results.len(),
+             bin_size_4);
+
+    let mut groups: Vec<Group> = results.iter()
+                                        .map(|ref indices| Group::new(&weights, &indices))
+                                        .collect();
+    groups.sort_by_key(|a| a.count);    // Sort by package count
+
+    println!("sorted. Now filtering...");
+
+    // Now that the groups are sorted by package order, find the first one that
+    // has at least two other non-overlapping group (bits1 & bits2 & bits3) == 0
+    // If three groups can exist at the same time, the fourth exists by default
+    //
+    // Note: this is extremely slow without breaking on the first result. Should find a better way.
+    let mut best_group = Group {
+        count: 0,
+        weight: 0,
+        qe: 0,
+        bitset: 0,
+    };
+    'outer: for group_1 in &groups {
+        if group_1.count > lowest_count {
+            break;
+        }
+        for group_2 in &groups {
+            if group_1.bitset & group_2.bitset == 0 {
+                for group_3 in &groups {
+                    if group_1.bitset & group_2.bitset & group_3.bitset == 0 {
+                        best_group = group_1.clone();
+                        break 'outer;
+                    }
+                }
+            }
+        }
+        println!("group_1.count {}", group_1.count);
+    }
+
+    println!("Part 2: found best group_1: {:?}", best_group);
+    assert_eq!(best_group.qe, 80393059);
 }
